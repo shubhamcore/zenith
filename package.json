@@ -1,0 +1,35 @@
+{
+  "name": "zenith",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "ZENITH — a live planetary operations console in the browser. Real orbits, earthquakes, space weather, and launches. No API keys.",
+  "author": "shubhamcore",
+  "homepage": "https://github.com/shubhamcore/zenith",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/shubhamcore/zenith.git"
+  },
+  "scripts": {
+    "dev": "vite --host 0.0.0.0 --port 4177",
+    "build": "vite build",
+    "preview": "vite preview --host 0.0.0.0 --port 4177",
+    "start": "node server.js"
+  },
+  "keywords": [
+    "earth",
+    "globe",
+    "satellites",
+    "iss",
+    "space-weather",
+    "threejs"
+  ],
+  "license": "MIT",
+  "devDependencies": {
+    "vite": "^8.2.2"
+  },
+  "dependencies": {
+    "satellite.js": "^7.1.0",
+    "three": "^0.185.1"
+  }
+}

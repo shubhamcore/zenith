@@ -1,0 +1,158 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#07070c" />
+    <meta
+      name="description"
+      content="ZENITH — a live planetary operations console. Real orbits, earthquakes, space weather, and launches on a cinematic 3D Earth. No API keys required."
+    />
+    <title>ZENITH — Planetary Operations</title>
+    <style>
+      html, body, #app { margin: 0; height: 100%; background: #07070c; color: #e8e4dc; overflow: hidden; font-family: system-ui, sans-serif; }
+      #globe { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+      #boot { position: absolute; inset: 0; z-index: 40; display: grid; place-items: center; background: #050508; }
+      .boot-word { letter-spacing: 0.42em; font-weight: 800; }
+      .boot-sub { margin-top: 10px; font-size: 12px; color: #8a8478; }
+      #boot.out { opacity: 0; visibility: hidden; }
+    </style>
+  </head>
+  <body>
+    <div id="app">
+      <canvas id="globe"></canvas>
+
+      <div id="vignette"></div>
+      <div id="scan"></div>
+
+      <div id="boot" aria-hidden="true">
+        <div class="boot-inner">
+          <div class="boot-ring"></div>
+          <div class="boot-word">ZENITH</div>
+          <div class="boot-sub" id="boot-sub">acquiring public telemetry</div>
+          <div class="boot-bar"><span id="boot-fill"></span></div>
+        </div>
+      </div>
+
+      <header id="topbar">
+        <div class="brand">
+          <div class="brand-mark" aria-hidden="true"></div>
+          <div>
+            <div class="brand-name">ZENITH</div>
+            <div class="brand-tag">planetary operations</div>
+          </div>
+        </div>
+        <div class="clock-block">
+          <div class="clock" id="clock-utc">00:00:00</div>
+          <div class="clock-meta" id="clock-date">UTC</div>
+        </div>
+        <div class="vitals" id="vitals">
+          <button class="chip" data-tip="Geomagnetic Kp index" id="chip-kp">
+            <span class="chip-k">Kp</span><span class="chip-v" id="val-kp">—</span>
+          </button>
+          <button class="chip" data-tip="Solar wind speed" id="chip-sw">
+            <span class="chip-k">SW</span><span class="chip-v" id="val-sw">—</span>
+          </button>
+          <button class="chip" data-tip="Earthquakes last 24h" id="chip-qk">
+            <span class="chip-k">M2.5+</span><span class="chip-v" id="val-qk">—</span>
+          </button>
+          <button class="chip" data-tip="Catalog objects in view" id="chip-sat">
+            <span class="chip-k">SATS</span><span class="chip-v" id="val-sat">—</span>
+          </button>
+          <button class="chip" data-tip="Seismic energy driving the atmosphere glow" id="chip-pulse">
+            <span class="chip-k">PULSE</span><span class="chip-v" id="val-pulse">—</span>
+          </button>
+        </div>
+      </header>
+
+      <button type="button" id="pass-ribbon" title="Fly to Bihta / ride the pass">
+        <span class="pr-k">ISS · BIHTA</span>
+        <span class="pr-t" id="pass-eta">T−—</span>
+        <span class="pr-s" id="pass-meta">acquiring TLE</span>
+      </button>
+
+      <aside id="left" class="panel">
+        <div class="panel-h">
+          <span>LAYERS</span>
+          <span class="hint">toggle</span>
+        </div>
+        <div class="layers" id="layers"></div>
+
+        <div class="panel-h mt">
+          <span>EVENTS</span>
+          <span class="hint" id="events-count">live</span>
+        </div>
+        <div class="events" id="events"></div>
+      </aside>
+
+      <aside id="right" class="panel">
+        <div class="panel-h">
+          <span>TRACK</span>
+          <span class="hint" id="track-mode">free camera</span>
+        </div>
+        <div class="track-card" id="track-card">
+          <div class="track-empty">Click a satellite, quake, or launch — or press <kbd>2</kbd> to ride the ISS.</div>
+        </div>
+
+        <div class="panel-h mt">
+          <span>BRIEFING</span>
+          <span class="hint">auto</span>
+        </div>
+        <article class="briefing" id="briefing">
+          <p class="dim">Waiting on public feeds…</p>
+        </article>
+      </aside>
+
+      <footer id="bottom">
+        <div class="modes" id="modes">
+          <button data-mode="free" class="on">FREE</button>
+          <button data-mode="iss">ISS</button>
+          <button data-mode="terminator">TERMINATOR</button>
+          <button data-mode="cinema">CINEMA</button>
+        </div>
+        <div class="telemetry" id="telemetry">
+          <span>SUN <b id="t-sun">—</b></span>
+          <span>LOOK <b id="t-look">—</b></span>
+          <span>ALT <b id="t-alt">—</b></span>
+        </div>
+        <div class="help-mini">
+          <button type="button" id="btn-shot" class="text-btn">SNAPSHOT</button>
+          <span><kbd>G</kbd> Bihta</span>
+          <span><kbd>S</kbd> shot</span>
+          <span><kbd>?</kbd> keys</span>
+        </div>
+      </footer>
+
+      <div id="toast" class="toast hidden" role="status"></div>
+
+      <div id="keys" class="modal hidden" role="dialog" aria-label="Keyboard">
+        <div class="modal-card">
+          <div class="panel-h"><span>COMMANDS</span><button id="keys-close" class="text-btn">close</button></div>
+          <ul class="keylist">
+            <li><kbd>1</kbd> Free camera</li>
+            <li><kbd>2</kbd> Lock ISS</li>
+            <li><kbd>3</kbd> Ride the terminator</li>
+            <li><kbd>4</kbd> Cinema tour</li>
+            <li><kbd>G</kbd> Fly to Bihta beacon</li>
+            <li><kbd>P</kbd> Next ISS over Bihta</li>
+            <li><kbd>S</kbd> Snapshot PNG</li>
+            <li><kbd>C</kbd> Toggle clouds</li>
+            <li><kbd>A</kbd> Toggle aurora</li>
+            <li><kbd>Q</kbd> Next earthquake</li>
+            <li><kbd>L</kbd> Next launch</li>
+            <li><kbd>H</kbd> Hide / show HUD</li>
+            <li><kbd>R</kbd> Reset view</li>
+            <li><kbd>Space</kbd> Pause cinema</li>
+            <li><kbd>?</kbd> This panel</li>
+          </ul>
+          <p class="dim tiny">
+            All layers are public: USGS, CelesTrak, NOAA SWPC, The Space Devs, OpenSky (optional).
+            Nothing here is classified. It only looks like it is.
+          </p>
+        </div>
+      </div>
+    </div>
+    <script type="module" src="./src/main.js"></script>
+  </body>
+</html>
